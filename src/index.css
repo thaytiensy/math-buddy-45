@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+body {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.math-card {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 2px solid #e0e7ff;
+  transition: all 0.3s ease;
+}
+
+.btn-fun {
+  font-weight: 800;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.btn-fun:active {
+  transform: scale(0.95);
+}
+
+.btn-primary {
+  background: linear-gradient(to right, #3b82f6, #4f46e5);
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background: linear-gradient(to right, #2563eb, #4338ca);
+}
+
+.btn-sunny {
+  background: linear-gradient(to right, #facc15, #eab308);
+  color: #451a03;
+}
+.btn-sunny:hover {
+  background: linear-gradient(to right, #eab308, #ca8a04);
+}
