@@ -100,8 +100,13 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-indigo-100 py-4 text-center text-xs text-slate-400 font-semibold">
-        Toán Vui Tiểu Học 4-5 © 2026 • Đồng hành cùng học sinh tiểu học bám sát chương trình GDPT 2018
+      <footer className="bg-white border-t border-indigo-100 py-5 text-center text-xs text-slate-500 font-semibold space-y-1">
+        <p className="font-bold text-slate-700">
+          Toán Đồng Hành Lớp 4, 5 © 2026 • Chuẩn chương trình GDPT 2018
+        </p>
+        <p className="text-slate-500">
+          Chủ nhiệm & Tác giả xây dựng: <span className="text-indigo-600 font-bold">Nguyễn Thị Minh Hiền</span> & <span className="text-indigo-600 font-bold">Nguyễn Thị Thủy Tiên</span>
+        </p>
       </footer>
 
       {/* Modals */}

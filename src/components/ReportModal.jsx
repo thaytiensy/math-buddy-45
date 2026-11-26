@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Award, Star, Flame, CheckCircle, Printer, Sparkles } from 'lucide-react';
+import { X, Award, Star, Flame, CheckCircle, Printer, Sparkles, UserCheck } from 'lucide-react';
 import { sound } from '../utils/audio';
 
 export default function ReportModal({ isOpen, onClose, stars, streak }) {
@@ -27,8 +27,8 @@ export default function ReportModal({ isOpen, onClose, stars, streak }) {
           <div className="flex items-center gap-3">
             <span className="text-3xl">📜</span>
             <div>
-              <h3 className="font-black text-xl">Báo Cáo Học Tập & Vinh Danh</h3>
-              <p className="text-xs text-indigo-100 font-semibold">Theo dõi sự tiến bộ từng ngày của bạn nhỏ</p>
+              <h3 className="font-black text-xl">Phiếu Vinh Danh & Báo Cáo Học Tập</h3>
+              <p className="text-xs text-indigo-100 font-semibold">Toán Đồng Hành Lớp 4, 5 • GDPT 2018</p>
             </div>
           </div>
           <button
@@ -52,6 +52,12 @@ export default function ReportModal({ isOpen, onClose, stars, streak }) {
             <h4 className="text-2xl font-black text-amber-950 mt-1">{rank.title}</h4>
             <div className="inline-block mt-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-black px-3 py-1 rounded-full shadow">
               Hạng: {rank.badge}
+            </div>
+
+            {/* Author Attribution on Certificate */}
+            <div className="mt-4 pt-3 border-t border-amber-200/80 text-xs text-amber-900 font-semibold flex items-center justify-center gap-1.5">
+              <UserCheck size={15} className="text-amber-700" />
+              <span>Chủ nhiệm dự án: <strong>Nguyễn Thị Minh Hiền</strong> & <strong>Nguyễn Thị Thủy Tiên</strong></span>
             </div>
           </div>
 

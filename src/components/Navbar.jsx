@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Flame, Edit, Trophy, Compass, Zap, BookOpen } from 'lucide-react';
+import { Star, Flame, Edit, Trophy, Compass, Zap, BookOpen, Heart } from 'lucide-react';
 import { sound } from '../utils/audio';
 
 export default function Navbar({ 
@@ -13,21 +13,24 @@ export default function Navbar({
   onOpenReport 
 }) {
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b-2 border-indigo-100 shadow-sm px-4 lg:px-8 py-3">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-indigo-100 shadow-sm px-4 lg:px-8 py-3">
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-2xl flex items-center justify-center text-2xl shadow-md border-2 border-amber-500">
+          <div className="w-12 h-12 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-2xl flex items-center justify-center text-2xl shadow-md border-2 border-amber-500">
             🦉
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-xl text-indigo-950 tracking-tight">Toán Vui 4-5</span>
+              <span className="font-black text-lg md:text-xl text-indigo-950 tracking-tight">Toán Đồng Hành Lớp 4, 5</span>
               <span className="bg-amber-100 text-amber-800 text-[11px] font-extrabold px-2 py-0.5 rounded-full border border-amber-300">
                 GDPT 2018
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-semibold">Người bạn đồng hành toán học thông minh</p>
+            <p className="text-xs text-slate-500 font-semibold flex items-center gap-1">
+              <span>Chủ nhiệm & Tác giả:</span>
+              <span className="font-bold text-indigo-700">Nguyễn Thị Minh Hiền & Nguyễn Thị Thủy Tiên</span>
+            </p>
           </div>
         </div>
 
@@ -108,7 +111,7 @@ export default function Navbar({
 
           {/* Stars */}
           <div className="flex items-center gap-1 bg-yellow-50 border border-yellow-300 px-3 py-1 rounded-2xl shadow-sm">
-            <Star size={18} className="fill-yellow-400 text-yellow-500 animate-spin-slow" />
+            <Star size={18} className="fill-yellow-400 text-yellow-500" />
             <span className="font-black text-amber-950 text-sm">{stars}</span>
           </div>
 
