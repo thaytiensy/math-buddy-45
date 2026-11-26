@@ -5,3 +5,7 @@ server.log
 .env.*
 .vercel
 *.local
+
+.vercel
+
+*.log
