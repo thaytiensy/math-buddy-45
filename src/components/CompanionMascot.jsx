@@ -1,21 +1,20 @@
 import React from 'react';
-import { Volume2, Sparkles, Smile, Award } from 'lucide-react';
+import { Volume2, Sparkles, Award } from 'lucide-react';
 import { speakVietnamese } from '../utils/audio';
 
 export default function CompanionMascot({ mood = 'happy', message, onSpeak, extraBadge }) {
-  // Moods: happy, thinking, celebrate, encouraging
   const mascotFaces = {
     happy: '🦉',
     thinking: '🤔',
     celebrate: '🥳',
-    encouraging: '💪'
+    encouraging: '💪',
   };
 
   const speechBubbles = {
-    happy: 'Xin chào bạn nhỏ! Cùng Cú Vàng Poki giải toán nhận sao lấp lánh nhé!',
+    happy: 'Xin chào bạn nhỏ! Cùng Cú Vàng giải toán nhận sao lấp lánh nhé!',
     thinking: 'Hừm... Hãy đọc kĩ từng dữ kiện đề bài cho nha bạn!',
     celebrate: 'Đỉnh quá! Bạn làm đúng rồi, nhận thêm 10 Sao Siêu Đẳng!',
-    encouraging: 'Đừng lo lắng, sai một chút là cơ hội để học bài học mới đó!'
+    encouraging: 'Đừng lo lắng, sai một chút là cơ hội để học bài học mới đó!',
   };
 
   const currentMessage = message || speechBubbles[mood] || speechBubbles.happy;
@@ -27,14 +26,14 @@ export default function CompanionMascot({ mood = 'happy', message, onSpeak, extr
           {mascotFaces[mood] || '🦉'}
         </div>
         <span className="absolute -bottom-2 -right-1 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow">
-          Cú Poki
+          Cú Vàng
         </span>
       </div>
 
       <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
           <span className="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-1">
-            <Sparkles size={14} className="text-amber-600" /> Bạn đồng hành AI
+            <Sparkles size={14} className="text-amber-600" /> Trợ lý học toán thông minh
           </span>
           {extraBadge && (
             <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -53,7 +52,7 @@ export default function CompanionMascot({ mood = 'happy', message, onSpeak, extr
           else speakVietnamese(currentMessage);
         }}
         className="p-3 bg-white hover:bg-amber-50 text-amber-600 rounded-2xl shadow-sm border border-amber-200 transition-transform active:scale-90"
-        title="Bấm để Cú Poki đọc to cho bạn nghe"
+        title="Bấm để Cú Vàng đọc to cho bạn nghe"
       >
         <Volume2 size={20} />
       </button>

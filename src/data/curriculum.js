@@ -17,9 +17,9 @@ export const CURRICULUM = {
             options: ['72 050 400', '72 005 400', '72 500 400', '7 205 400'],
             answerIndex: 1,
             hint: 'Lớp triệu có 72, lớp nghìn có 005 (không trăm linh năm), lớp đơn vị có 400.',
-            explanation: 'Viết số theo từng lớp từ trái sang phải: Lớp triệu (72) -> Lớp nghìn (005) -> Lớp đơn vị (400) => 72 005 400.',
+            explanation: 'Viết số theo từng lớp từ trái sang phải: Lớp triệu (72), rồi đến lớp nghìn (005), rồi đến lớp đơn vị (400), suy ra 72 005 400.',
             visualType: 'place-value',
-            visualData: { millions: 72, thousands: '005', units: '400' }
+            visualData: { millions: 72, thousands: '005', units: '400' },
           },
           {
             id: 'g4-q2',
@@ -29,7 +29,7 @@ export const CURRICULUM = {
             hint: 'Hãy nhóm 25 × 4 lại trước để được số tròn trăm (100).',
             explanation: 'Áp dụng tính chất kết hợp của phép nhân: (25 × 4) × 78 = 100 × 78 = 7 800.',
             visualType: 'tip-card',
-            visualData: { rule: '25 × 4 = 100' }
+            visualData: { rule: '25 × 4 = 100' },
           },
           {
             id: 'g4-q3',
@@ -37,19 +37,19 @@ export const CURRICULUM = {
             options: ['8 400 000', '8 500 000', '8 460 000', '9 000 000'],
             answerIndex: 1,
             hint: 'Chữ số hàng trăm nghìn là 4. Chữ số liền sau (hàng chục nghìn) là 6 (lớn hơn 5) nên ta làm tròn lên.',
-            explanation: 'Xét chữ số hàng chục nghìn là 6 ≥ 5, ta cộng 1 vào chữ số hàng trăm nghìn (4 + 1 = 5) và thay các chữ số sau bằng 0 => 8 500 000.',
-            visualType: 'round-num'
+            explanation: 'Xét chữ số hàng chục nghìn là 6 ≥ 5, ta cộng 1 vào chữ số hàng trăm nghìn (4 + 1 = 5) và thay các chữ số sau bằng 0, suy ra 8 500 000.',
+            visualType: 'round-num',
           },
           {
             id: 'g4-q4',
             question: 'Một xe tải chở 125 bao gạo, mỗi bao nặng 50 kg. Hỏi xe tải đó chở tất cả bao nhiêu tạ gạo?',
             options: ['62,5 tạ', '625 tạ', '6 250 tạ', '62 tạ'],
             answerIndex: 0,
-            hint: 'Tính tổng khối lượng bằng kilôgam trước (125 × 50), sau đó đổi từ kg sang tạ (1 tạ = 100 kg).',
-            explanation: 'Tổng số kg gạo xe chở là: 125 × 50 = 6 250 kg. Đổi sang tạ: 6 250 : 100 = 62,5 tạ (hoặc 62 tạ 50 kg).',
-            visualType: 'unit-conv'
-          }
-        ]
+            hint: 'Tính tổng khối lượng bằng ki-lô-gam trước (125 × 50), sau đó đổi từ ki-lô-gam sang tạ (1 tạ = 100 kg).',
+            explanation: 'Tổng số ki-lô-gam gạo xe chở là: 125 × 50 = 6 250 kg. Đổi sang tạ: 6 250 : 100 = 62,5 tạ (tức 62 tạ 50 kg).',
+            visualType: 'unit-conv',
+          },
+        ],
       },
       {
         id: 'g4-fractions',
@@ -62,10 +62,10 @@ export const CURRICULUM = {
             question: 'Rút gọn phân số 36/48 về phân số tối giản:',
             options: ['6/8', '9/12', '3/4', '4/5'],
             answerIndex: 2,
-            hint: 'Cả tử số 36 và mẫu số 48 đều chia hết cho 12 (Ước chung lớn nhất).',
+            hint: 'Cả tử số 36 và mẫu số 48 đều chia hết cho 12 (ước chung lớn nhất).',
             explanation: 'Ta chia cả tử số và mẫu số cho 12: 36 : 12 = 3; 48 : 12 = 4. Vậy phân số tối giản là 3/4.',
             visualType: 'fraction',
-            visualData: { num: 3, den: 4 }
+            visualData: { num: 3, den: 4 },
           },
           {
             id: 'g4-q6',
@@ -73,17 +73,17 @@ export const CURRICULUM = {
             options: ['5/15', '7/10', '1/2', '4/10'],
             answerIndex: 1,
             hint: 'Quy đồng mẫu số chung là 10: 2/5 = 4/10.',
-            explanation: 'Quy đồng mẫu số: 2/5 = (2 × 2) / (5 × 2) = 4/10. Khi đó: 4/10 + 3/10 = 7/10.',
-            visualType: 'fraction-math'
+            explanation: 'Quy đồng mẫu số: 2/5 = (2 × 2)/(5 × 2) = 4/10. Khi đó: 4/10 + 3/10 = 7/10.',
+            visualType: 'fraction-math',
           },
           {
             id: 'g4-q7',
-            question: 'Tìm phân số: 3/4 của 60 kg là bao nhiêu kilôgam?',
+            question: 'Tìm phân số của một số: 3/4 của 60 kg là bao nhiêu ki-lô-gam?',
             options: ['45 kg', '40 kg', '50 kg', '35 kg'],
             answerIndex: 0,
             hint: 'Muốn tìm phân số của một số, ta lấy số đó nhân với phân số (hoặc lấy 60 chia 4 rồi nhân 3).',
             explanation: '60 × 3/4 = (60 : 4) × 3 = 15 × 3 = 45 kg.',
-            visualType: 'fraction-word'
+            visualType: 'fraction-word',
           },
           {
             id: 'g4-q8',
@@ -91,10 +91,10 @@ export const CURRICULUM = {
             options: ['10/18', '5/4', '4/5', '15/12'],
             answerIndex: 1,
             hint: 'Chia một phân số cho một phân số là nhân với phân số đảo ngược.',
-            explanation: '5/6 : 2/3 = 5/6 × 3/2 = (5 × 3) / (6 × 2) = 15/12 = 5/4.',
-            visualType: 'fraction-div'
-          }
-        ]
+            explanation: '5/6 : 2/3 = 5/6 × 3/2 = (5 × 3)/(6 × 2) = 15/12 = 5/4.',
+            visualType: 'fraction-div',
+          },
+        ],
       },
       {
         id: 'g4-geometry',
@@ -110,7 +110,7 @@ export const CURRICULUM = {
             hint: 'Công thức diện tích hình bình hành: S = a × h (đáy nhân chiều cao cùng đơn vị đo).',
             explanation: 'Diện tích hình bình hành là: S = 18 × 10 = 180 (cm²).',
             visualType: 'parallelogram',
-            visualData: { base: 18, height: 10 }
+            visualData: { base: 18, height: 10 },
           },
           {
             id: 'g4-q10',
@@ -120,7 +120,7 @@ export const CURRICULUM = {
             hint: 'Diện tích hình thoi bằng tích độ dài hai đường chéo chia cho 2: S = (m × n) : 2.',
             explanation: 'Diện tích hình thoi là: S = (12 × 16) : 2 = 192 : 2 = 96 (cm²).',
             visualType: 'rhombus',
-            visualData: { d1: 12, d2: 16 }
+            visualData: { d1: 12, d2: 16 },
           },
           {
             id: 'g4-q11',
@@ -129,9 +129,9 @@ export const CURRICULUM = {
             answerIndex: 1,
             hint: 'Lúc 3 giờ, kim ngắn chỉ số 3, kim dài chỉ số 12 tạo thành góc 90 độ.',
             explanation: 'Hai kim vuông góc với nhau tạo thành góc vuông (90°).',
-            visualType: 'clock-angle'
-          }
-        ]
+            visualType: 'clock-angle',
+          },
+        ],
       },
       {
         id: 'g4-wordmath',
@@ -147,7 +147,7 @@ export const CURRICULUM = {
             hint: 'Vẽ sơ đồ: Lan 2 phần, Mai 3 phần. Tổng số phần bằng nhau là 2 + 3 = 5 phần.',
             explanation: 'Tổng số phần bằng nhau: 2 + 3 = 5 (phần). Giá trị 1 phần là: 45 : 5 = 9 (quyển). Số vở của Mai là: 9 × 3 = 27 (quyển).',
             visualType: 'ratio-bars',
-            visualData: { p1: 2, p2: 3, total: 45 }
+            visualData: { p1: 2, p2: 3, total: 45 },
           },
           {
             id: 'g4-q13',
@@ -155,12 +155,12 @@ export const CURRICULUM = {
             options: ['60', '75', '90', '120'],
             answerIndex: 2,
             hint: 'Công thức tìm số lớn khi biết tổng và hiệu: Số lớn = (Tổng + Hiệu) : 2.',
-            explanation: 'Số lớn là: (150 + 30) : 2 = 180 : 2 = 90. (Số bé là: 90 - 30 = 60).',
-            visualType: 'sum-diff'
-          }
-        ]
-      }
-    ]
+            explanation: 'Số lớn là: (150 + 30) : 2 = 180 : 2 = 90. Số bé là: 90 - 30 = 60.',
+            visualType: 'sum-diff',
+          },
+        ],
+      },
+    ],
   },
   grade5: {
     id: 'grade5',
@@ -181,7 +181,7 @@ export const CURRICULUM = {
             answerIndex: 2,
             hint: 'Sau dấu phẩy, vị trí thứ nhất là phần mười, vị trí thứ hai là phần trăm.',
             explanation: 'Chữ số 7 đứng ở hàng phần trăm nên có giá trị là 7/100 (tức 0,07).',
-            visualType: 'decimal-place'
+            visualType: 'decimal-place',
           },
           {
             id: 'g5-q2',
@@ -189,8 +189,8 @@ export const CURRICULUM = {
             options: ['47,5', '475', '4750', '0,0475'],
             answerIndex: 1,
             hint: 'Khi nhân một số thập phân với 100, ta chuyển dấu phẩy sang bên phải 2 chữ số.',
-            explanation: 'Dịch dấu phẩy sang phải 2 chữ số: 4,75 -> 475.',
-            visualType: 'shift-dot'
+            explanation: 'Dịch dấu phẩy sang phải 2 chữ số: 4,75 suy ra 475.',
+            visualType: 'shift-dot',
           },
           {
             id: 'g5-q3',
@@ -199,7 +199,7 @@ export const CURRICULUM = {
             answerIndex: 0,
             hint: 'Viết thẳng cột dấu phẩy: coi 35,4 là 35,40 rồi trừ 18,76.',
             explanation: '35,40 - 18,76 = 16,64.',
-            visualType: 'vertical-math'
+            visualType: 'vertical-math',
           },
           {
             id: 'g5-q4',
@@ -208,15 +208,15 @@ export const CURRICULUM = {
             answerIndex: 1,
             hint: '15 chia 6 được 2 dư 3, đánh dấu phẩy vào thương rồi hạ 6: 36 chia 6 được 6.',
             explanation: '15,6 : 6 = 2,6.',
-            visualType: 'step-div'
-          }
-        ]
+            visualType: 'step-div',
+          },
+        ],
       },
       {
         id: 'g5-percentage',
         name: 'Tỉ Số Phần Trăm & Ứng Dụng',
         icon: 'TrendingUp',
-        desc: 'Tính toán % chiết khấu, lãi suất, tỉ lệ tăng trưởng',
+        desc: 'Tính toán phần trăm chiết khấu, lãi suất, tỉ lệ tăng trưởng',
         questions: [
           {
             id: 'g5-q5',
@@ -226,16 +226,16 @@ export const CURRICULUM = {
             hint: 'Tìm thương của số nữ và tổng học sinh: 24 : 40, rồi nhân với 100 và thêm ký hiệu %.',
             explanation: '24 : 40 = 0,6 = 60%. Vậy số học sinh nữ chiếm 60% cả lớp.',
             visualType: 'percent-circle',
-            visualData: { percent: 60 }
+            visualData: { percent: 60 },
           },
           {
             id: 'g5-q6',
-            question: 'Một chiếc balo có giá niêm yết 250 000 đồng, nhân dịp khai giảng được giảm giá 20%. Số tiền được giảm là:',
+            question: 'Một chiếc ba lô có giá niêm yết 250 000 đồng, nhân dịp khai giảng được giảm giá 20%. Số tiền được giảm là:',
             options: ['20 000 đồng', '50 000 đồng', '200 000 đồng', '25 000 đồng'],
             answerIndex: 1,
             hint: 'Tìm 20% của 250 000 đồng: lấy 250 000 × 20 : 100.',
             explanation: 'Số tiền giảm = 250 000 × 20% = 250 000 × 0,2 = 50 000 (đồng). Khách chỉ cần trả 200 000 đồng.',
-            visualType: 'discount-tag'
+            visualType: 'discount-tag',
           },
           {
             id: 'g5-q7',
@@ -244,15 +244,15 @@ export const CURRICULUM = {
             answerIndex: 1,
             hint: 'Muốn tìm số đó, ta lấy 72 chia cho 30 rồi nhân với 100 (hoặc 72 : 0,3).',
             explanation: 'Số cần tìm là: 72 : 30 × 100 = 2,4 × 100 = 240.',
-            visualType: 'reverse-percent'
-          }
-        ]
+            visualType: 'reverse-percent',
+          },
+        ],
       },
       {
         id: 'g5-geometry',
         name: 'Hình Học & Thể Tích Khối',
         icon: 'Box',
-        desc: 'Hình thang, hình tròn, diện tích xung quanh & thể tích hình khối',
+        desc: 'Hình thang, hình tròn, diện tích xung quanh và thể tích hình khối',
         questions: [
           {
             id: 'g5-q8',
@@ -262,7 +262,7 @@ export const CURRICULUM = {
             hint: 'Muốn tính diện tích hình thang: Đáy lớn đáy nhỏ ta đem cộng vào, cộng vào nhân với chiều cao, chia đôi lấy nửa thế nào cũng ra.',
             explanation: 'Diện tích mảnh đất: S = ((20 + 14) × 10) : 2 = (34 × 10) : 2 = 170 (m²).',
             visualType: 'trapezoid',
-            visualData: { a: 20, b: 14, h: 10 }
+            visualData: { a: 20, b: 14, h: 10 },
           },
           {
             id: 'g5-q9',
@@ -272,19 +272,19 @@ export const CURRICULUM = {
             hint: 'Công thức diện tích hình tròn: S = r × r × 3,14.',
             explanation: 'Diện tích hình tròn: S = 5 × 5 × 3,14 = 25 × 3,14 = 78,5 (cm²).',
             visualType: 'circle',
-            visualData: { r: 5 }
+            visualData: { r: 5 },
           },
           {
             id: 'g5-q10',
             question: 'Một bể nước dạng hình hộp chữ nhật có chiều dài 2 m, chiều rộng 1,5 m và chiều cao 1,2 m. Bể đó chứa được tối đa bao nhiêu lít nước? (Biết 1 dm³ = 1 lít)',
             options: ['3,6 lít', '360 lít', '3 600 lít', '36 000 lít'],
             answerIndex: 2,
-            hint: 'Thể tích hình hộp chữ nhật: V = a × b × c (đổi kích thước ra đề-xi-mét hoặc tính m³ rồi đổi sang lít, 1 m³ = 1000 lít).',
+            hint: 'Thể tích hình hộp chữ nhật: V = a × b × c (đổi kích thước ra đề-xi-mét hoặc tính mét khối rồi đổi sang lít, 1 m³ = 1 000 lít).',
             explanation: 'Thể tích bể = 2 × 1,5 × 1,2 = 3,6 (m³). Đổi 3,6 m³ = 3 600 dm³ = 3 600 lít nước.',
             visualType: 'cuboid',
-            visualData: { l: 2, w: 1.5, h: 1.2 }
-          }
-        ]
+            visualData: { l: 2, w: 1.5, h: 1.2 },
+          },
+        ],
       },
       {
         id: 'g5-motion',
@@ -295,25 +295,34 @@ export const CURRICULUM = {
           {
             id: 'g5-q11',
             question: 'Một ô tô đi quãng đường 135 km hết 2 giờ 30 phút. Vận tốc của ô tô đó là:',
-            options: ['50 km/h', '54 km/h', '60 km/h', '45 km/h'],
+            options: ['50 km/giờ', '54 km/giờ', '60 km/giờ', '45 km/giờ'],
             answerIndex: 1,
             hint: 'Đổi 2 giờ 30 phút = 2,5 giờ. Áp dụng công thức: v = s : t.',
-            explanation: 'Đổi 2 giờ 30 phút = 2,5 giờ. Vận tốc của ô tô: v = 135 : 2,5 = 54 (km/h).',
+            explanation: 'Đổi 2 giờ 30 phút = 2,5 giờ. Vận tốc của ô tô: v = 135 : 2,5 = 54 (km/giờ).',
             visualType: 'motion-car',
-            visualData: { s: 135, t: '2.5h', v: 54 }
+            visualData: { s: 135, t: '2,5 giờ', v: 54 },
           },
           {
             id: 'g5-q12',
-            question: 'Hai thành phố A và B cách nhau 180 km. Cùng lúc 7 giờ sáng, một ô tô đi từ A đến B với vận tốc 50 km/h và một xe máy đi từ B về A với vận tốc 40 km/h. Hai xe gặp nhau lúc mấy giờ?',
+            question: 'Hai thành phố A và B cách nhau 180 km. Cùng lúc 7 giờ sáng, một ô tô đi từ A đến B với vận tốc 50 km/giờ và một xe máy đi từ B về A với vận tốc 40 km/giờ. Hai xe gặp nhau lúc mấy giờ?',
             options: ['8 giờ', '9 giờ', '9 giờ 30 phút', '10 giờ'],
             answerIndex: 1,
-            hint: 'Hai chuyển động ngược chiều: Tổng vận tốc = 50 + 40 = 90 km/h. Thời gian gặp = Quãng đường : Tổng vận tốc.',
-            explanation: 'Tổng vận tốc hai xe là: 50 + 40 = 90 (km/h). Thời gian hai xe đi để gặp nhau: 180 : 90 = 2 (giờ). Thời điểm gặp nhau: 7 giờ + 2 giờ = 9 giờ sáng.',
+            hint: 'Hai chuyển động ngược chiều: Tổng vận tốc = 50 + 40 = 90 km/giờ. Thời gian gặp = Quãng đường : Tổng vận tốc.',
+            explanation: 'Tổng vận tốc hai xe là: 50 + 40 = 90 (km/giờ). Thời gian hai xe đi để gặp nhau: 180 : 90 = 2 (giờ). Thời điểm gặp nhau: 7 giờ + 2 giờ = 9 giờ sáng.',
             visualType: 'meet-motion',
-            visualData: { dist: 180, v1: 50, v2: 40 }
-          }
-        ]
-      }
-    ]
-  }
+            visualData: { dist: 180, v1: 50, v2: 40 },
+          },
+        ],
+      },
+    ],
+  },
 };
+
+export const DEFAULT_QUESTS = [
+  { id: 1, name: 'Rừng Số Tự Nhiên', starsNeeded: 0, icon: '🌲', reward: 'Huy hiệu Mầm Xanh', challenge: 'Tìm giá trị của x: x - 450 = 1 250', answer: '1700', options: ['1700', '800', '1600', '1800'] },
+  { id: 2, name: 'Thung Lũng Phân Số', starsNeeded: 20, icon: '🌈', reward: 'Huy hiệu Thợ Chia Bánh', challenge: 'Phân số 15/20 bằng phân số tối giản nào?', answer: '3/4', options: ['3/4', '5/4', '1/2', '3/5'] },
+  { id: 3, name: 'Vực Thẳm Hình Học', starsNeeded: 50, icon: '📐', reward: 'Huy hiệu Kiến Trúc Sư Nhí', challenge: 'Chu vi hình vuông là 36 cm. Diện tích của nó là:', answer: '81 cm²', options: ['81 cm²', '144 cm²', '36 cm²', '72 cm²'] },
+  { id: 4, name: 'Hồ Nước Thập Phân', starsNeeded: 80, icon: '💧', reward: 'Huy hiệu Bậc Thầy Dấu Phẩy', challenge: '0,25 viết dưới dạng phân số tối giản là:', answer: '1/4', options: ['1/4', '1/2', '2/5', '1/5'] },
+  { id: 5, name: 'Đồi Gió Phần Trăm', starsNeeded: 120, icon: '🌾', reward: 'Huy hiệu Thần Tài Tính Nhẩm', challenge: '25% của 800 kg là:', answer: '200 kg', options: ['200 kg', '400 kg', '150 kg', '250 kg'] },
+  { id: 6, name: 'Đỉnh Núi Siêu Chuyển Động', starsNeeded: 160, icon: '🏔️', reward: 'Cúp Nhà Thám Hiểm Hoàng Gia', challenge: 'Vận tốc 60 km/giờ. Sau 3 giờ đi được quãng đường bao nhiêu?', answer: '180 km', options: ['180 km', '20 km', '120 km', '200 km'] },
+];

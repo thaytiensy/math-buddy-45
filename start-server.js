@@ -29,14 +29,14 @@ async function findAvailablePort() {
 async function main() {
   const port = await findAvailablePort();
   if (!port) {
-    console.error("Không tìm thấy cổng trống trong dải 4350 - 4399!");
+    console.error('Không tìm thấy cổng trống trong dải 4350 - 4399!');
     process.exit(1);
   }
 
-  console.log(`[Math Buddy 4-5] Đang khởi chạy ứng dụng tại cổng: ${port}`);
+  console.log(`[Toán Đồng Hành Lớp 4, 5] Đang khởi chạy ứng dụng tại cổng: ${port}`);
   const child = spawn('npx', ['vite', 'preview', '--port', port.toString(), '--host', '0.0.0.0'], {
     stdio: 'inherit',
-    shell: true
+    shell: true,
   });
 
   child.on('exit', (code) => {

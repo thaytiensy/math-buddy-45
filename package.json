@@ -1,11 +1,14 @@
 {
   "name": "math-buddy-45",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "Ứng dụng Toán Đồng Hành Lớp 4, 5 chuẩn Chương trình Giáo dục phổ thông 2018",
+  "author": "Nguyễn Thị Minh Hiền và Nguyễn Thị Thủy Tiên",
   "type": "module",
   "scripts": {
     "dev": "vite --port 4350 --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --port 4350 --host 0.0.0.0"
+    "preview": "vite preview --port 4350 --host 0.0.0.0",
+    "docs": "node scripts/generate-docs.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -21,7 +24,9 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "docx": "^9.16.0",
     "postcss": "^8.4.49",
+    "pptxgenjs": "^4.0.1",
     "tailwindcss": "^4.3.5",
     "vite": "^6.0.7"
   }
