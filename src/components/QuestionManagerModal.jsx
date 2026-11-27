@@ -13,17 +13,56 @@ import {
   BookOpen,
   Compass,
   AlertCircle,
+  ImagePlus,
+  Link2,
+  Image as ImageIcon,
 } from 'lucide-react';
+import VisualHelper from './VisualHelper';
 import { sound, speakVietnamese, stopVietnameseSpeech } from '../utils/audio';
 
 const VISUAL_TYPES = [
   { value: 'none', label: 'Không kèm hình minh họa' },
+  { value: 'image', label: 'Ảnh minh họa (Tải từ máy hoặc Link URL)' },
+  { value: 'place-value', label: 'Bảng cấu tạo số (Triệu - Nghìn - Đơn vị)' },
+  { value: 'tip-card', label: 'Thẻ mẹo tính nhanh' },
   { value: 'fraction', label: 'Minh họa phân số' },
   { value: 'parallelogram', label: 'Hình bình hành' },
   { value: 'rhombus', label: 'Hình thoi' },
   { value: 'circle', label: 'Hình tròn' },
   { value: 'motion-car', label: 'Sơ đồ chuyển động đều' },
 ];
+
+const LEGACY_VISUAL_LABELS = {
+  'round-num': 'Minh họa làm tròn số',
+  'unit-conv': 'Minh họa đổi đơn vị đo',
+  'fraction-math': 'Minh họa phép tính phân số',
+  'fraction-word': 'Minh họa bài toán phân số',
+  'fraction-div': 'Minh họa chia phân số',
+  'clock-angle': 'Minh họa góc đồng hồ',
+  'ratio-bars': 'Sơ đồ đoạn thẳng Tổng - Tỉ',
+  'sum-diff': 'Sơ đồ Tổng - Hiệu',
+  'decimal-place': 'Bảng hàng số thập phân',
+  'shift-dot': 'Minh họa dịch dấu phẩy',
+  'vertical-math': 'Đặt tính rồi tính',
+  'step-div': 'Chia số thập phân',
+  'percent-circle': 'Biểu đồ tỉ số phần trăm',
+  'discount-tag': 'Minh họa giảm giá phần trăm',
+  'reverse-percent': 'Tìm số biết giá trị phần trăm',
+  trapezoid: 'Hình thang',
+  cuboid: 'Hình hộp chữ nhật',
+  'meet-motion': 'Sơ đồ hai xe gặp nhau',
+};
+
+const DEFAULT_VISUAL_DATA = {
+  fraction: { num: 3, den: 4 },
+  parallelogram: { base: 18, height: 10 },
+  rhombus: { d1: 16, d2: 12 },
+  circle: { r: 5 },
+  'motion-car': { s: 135, t: '2,5 giờ', v: 54 },
+  'place-value': { millions: 72, thousands: '005', units: '400' },
+  'tip-card': { rule: '25 × 4 = 100' },
+  image: { imageUrl: '', caption: '' },
+};
 
 const QUEST_ICONS = ['🌲', '🌈', '📐', '💧', '🌾', '🏔️', '🚀', '💎', '🦊', '🏆'];
 
@@ -35,6 +74,7 @@ const createEmptyQuestion = () => ({
   hint: '',
   explanation: '',
   visualType: 'none',
+  visualData: undefined,
 });
 
 const createEmptyQuest = (nextId) => ({
@@ -48,6 +88,78 @@ const createEmptyQuest = (nextId) => ({
   answer: '',
 });
 
+const estimateDataUrlKB = (dataUrl) => {
+  if (!dataUrl || typeof dataUrl !== 'string') return 0;
+  if (!dataUrl.startsWith('data:')) return 0;
+  const commaIdx = dataUrl.indexOf(',');
+  if (commaIdx === -1) return 0;
+  const base64Len = dataUrl.length - commaIdx - 1;
+  return Math.max(1, Math.round((base64Len * 3) / 4 / 1024));
+};
+
+const compressImageFile = (file, maxDimension = 800, quality = 0.72) =>
+  new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      reject(new Error('Vui lòng chọn đúng tệp hình ảnh (PNG, JPG, WebP).'));
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+      try {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          if (width >= height) {
+            height = Math.max(1, Math.round((height * maxDimension) / width));
+            width = maxDimension;
+          } else {
+            width = Math.max(1, Math.round((width * maxDimension) / height));
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Trình duyệt không hỗ trợ xử lý ảnh Canvas.'));
+          return;
+        }
+
+        // Nền trắng để ảnh PNG trong suốt không bị nền đen khi chuyển JPEG
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        let sizeKB = estimateDataUrlKB(dataUrl);
+
+        // Nếu ảnh quá chi tiết khiến dung lượng > 95KB, hạ thêm chất lượng một mức nhẹ để an toàn localStorage
+        if (sizeKB > 95) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.56);
+          sizeKB = estimateDataUrlKB(dataUrl);
+        }
+
+        URL.revokeObjectURL(objectUrl);
+        resolve({ dataUrl, width, height, sizeKB });
+      } catch (err) {
+        URL.revokeObjectURL(objectUrl);
+        reject(err);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Không đọc được tệp ảnh này. Vui lòng thử ảnh PNG, JPG hoặc WebP khác.'));
+    };
+
+    img.src = objectUrl;
+  });
+
 export default function QuestionManagerModal({
   isOpen,
   onClose,
@@ -60,6 +172,7 @@ export default function QuestionManagerModal({
   initialScope = 'practice',
   initialGrade = 'grade4',
   initialTopicIndex = 0,
+  initialQuestionIndex = null,
 }) {
   const [scope, setScope] = useState(initialScope); // 'practice' | 'adventure'
   const [gradeKey, setGradeKey] = useState(initialGrade);
@@ -67,6 +180,8 @@ export default function QuestionManagerModal({
 
   const [editingQuestionIdx, setEditingQuestionIdx] = useState(null); // null | -1 (new) | number
   const [qForm, setQForm] = useState(createEmptyQuestion());
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
+  const [previewImgError, setPreviewImgError] = useState(false);
 
   const [editingQuestIdx, setEditingQuestIdx] = useState(null); // null | -1 (new) | number
   const [questForm, setQuestForm] = useState(createEmptyQuest(1));
@@ -75,6 +190,8 @@ export default function QuestionManagerModal({
   const [confirmReset, setConfirmReset] = useState(false);
 
   const fileInputRef = useRef(null);
+  const imageUploadInputRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -85,10 +202,49 @@ export default function QuestionManagerModal({
       setEditingQuestIdx(null);
       setStatusNotice(null);
       setConfirmReset(false);
+      setPreviewImgError(false);
+
+      // Nếu mở trực tiếp từ câu hỏi đang làm ở Luyện tập, tự mở sẵn form sửa câu đó nếu hợp lệ
+      if (
+        initialScope === 'practice' &&
+        Number.isInteger(initialQuestionIndex) &&
+        initialQuestionIndex >= 0
+      ) {
+        const targetTopic = curriculum?.[initialGrade]?.topics?.[initialTopicIndex];
+        const targetQuestion = targetTopic?.questions?.[initialQuestionIndex];
+        if (targetQuestion) {
+          const opts = Array.isArray(targetQuestion.options)
+            ? [...targetQuestion.options]
+            : ['', '', '', ''];
+          while (opts.length < 4) opts.push('');
+          setQForm({
+            id: targetQuestion.id || `cau-${Date.now()}`,
+            question: targetQuestion.question || '',
+            options: opts.slice(0, 4).map((o) => String(o)),
+            answerIndex: Number.isInteger(targetQuestion.answerIndex)
+              ? targetQuestion.answerIndex
+              : 0,
+            hint: targetQuestion.hint || '',
+            explanation: targetQuestion.explanation || '',
+            visualType: targetQuestion.visualType || 'none',
+            visualData: targetQuestion.visualData
+              ? { ...targetQuestion.visualData }
+              : undefined,
+          });
+          setEditingQuestionIdx(initialQuestionIndex);
+        }
+      }
     } else {
       stopVietnameseSpeech();
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     }
-  }, [isOpen, initialScope, initialGrade, initialTopicIndex]);
+  }, [isOpen, initialScope, initialGrade, initialTopicIndex, initialQuestionIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -99,7 +255,13 @@ export default function QuestionManagerModal({
   const currentQuestions = currentTopic.questions || [];
 
   const showToast = (type, text) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setStatusNotice({ type, text });
+    if (type === 'success') {
+      toastTimerRef.current = setTimeout(() => {
+        setStatusNotice(null);
+      }, 5000);
+    }
   };
 
   const handleClose = () => {
@@ -112,6 +274,7 @@ export default function QuestionManagerModal({
     sound.playClick();
     setConfirmReset(false);
     setStatusNotice(null);
+    setPreviewImgError(false);
     if (idx === -1) {
       setQForm(createEmptyQuestion());
       setEditingQuestionIdx(-1);
@@ -127,35 +290,168 @@ export default function QuestionManagerModal({
         hint: target.hint || '',
         explanation: target.explanation || '',
         visualType: target.visualType || 'none',
-        visualData: target.visualData,
+        visualData: target.visualData ? { ...target.visualData } : undefined,
       });
       setEditingQuestionIdx(idx);
     }
   };
 
+  const handleVisualTypeChange = (nextType) => {
+    setPreviewImgError(false);
+    if (nextType === 'none') {
+      setQForm((prev) => ({
+        ...prev,
+        visualType: 'none',
+        visualData: undefined,
+      }));
+      return;
+    }
+
+    const defaultData = DEFAULT_VISUAL_DATA[nextType];
+    setQForm((prev) => ({
+      ...prev,
+      visualType: nextType,
+      visualData:
+        nextType === prev.visualType && prev.visualData
+          ? prev.visualData
+          : defaultData
+          ? { ...defaultData }
+          : prev.visualData,
+    }));
+  };
+
+  const updateVisualDataField = (field, value) => {
+    setQForm((prev) => ({
+      ...prev,
+      visualData: {
+        ...(DEFAULT_VISUAL_DATA[prev.visualType] || {}),
+        ...(prev.visualData || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleUploadImageFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setIsCompressingImage(true);
+    setPreviewImgError(false);
+    try {
+      const { dataUrl, width, height, sizeKB } = await compressImageFile(file, 800, 0.72);
+      setQForm((prev) => ({
+        ...prev,
+        visualType: 'image',
+        visualData: {
+          ...(prev.visualData || {}),
+          imageUrl: dataUrl,
+          caption: prev.visualData?.caption || '',
+        },
+      }));
+      sound.playClick();
+      showToast(
+        'success',
+        `Đã tải và nén ảnh tự động (${width}×${height}px, còn ${sizeKB} KB). Bấm "Lưu câu hỏi" để lưu lại!`
+      );
+    } catch (err) {
+      showToast('error', err?.message || 'Không thể xử lý ảnh. Vui lòng chọn tệp PNG, JPG hoặc WebP.');
+    } finally {
+      setIsCompressingImage(false);
+    }
+  };
+
+  const handleImageUrlChange = (urlValue) => {
+    setPreviewImgError(false);
+    setQForm((prev) => ({
+      ...prev,
+      visualType: urlValue.trim() ? 'image' : prev.visualType === 'image' ? 'image' : prev.visualType,
+      visualData: {
+        ...(prev.visualData || {}),
+        imageUrl: urlValue,
+      },
+    }));
+  };
+
+  const handleClearImage = () => {
+    sound.playClick();
+    setPreviewImgError(false);
+    setQForm((prev) => ({
+      ...prev,
+      visualType: 'none',
+      visualData: undefined,
+    }));
+    showToast('success', 'Đã xóa ảnh minh họa khỏi câu hỏi này.');
+  };
+
   const handleSaveQuestion = (e) => {
     e.preventDefault();
     const cleanedQuestion = qForm.question.trim();
-    const cleanedOptions = qForm.options.map((o) => o.trim());
 
     if (!cleanedQuestion) {
       showToast('error', 'Vui lòng nhập nội dung câu hỏi.');
       return;
     }
-    if (cleanedOptions.some((o) => !o)) {
-      showToast('error', 'Vui lòng điền đầy đủ cả 4 phương án trả lời A, B, C, D.');
+
+    // Cho phép 2, 3 hoặc 4 phương án (hỗ trợ câu hỏi Đúng/Sai 2 lựa chọn)
+    const nonEmptyEntries = qForm.options
+      .map((opt, origIdx) => ({ text: String(opt).trim(), origIdx }))
+      .filter((item) => item.text !== '');
+
+    if (nonEmptyEntries.length < 2) {
+      showToast(
+        'error',
+        'Vui lòng nhập ít nhất 2 phương án trả lời (ví dụ: Đúng / Sai hoặc đầy đủ A, B, C, D).'
+      );
       return;
     }
 
+    const mappedAnswerIndex = nonEmptyEntries.findIndex(
+      (item) => item.origIdx === qForm.answerIndex
+    );
+    if (mappedAnswerIndex === -1) {
+      showToast(
+        'error',
+        'Đáp án đúng đang chọn bị bỏ trống. Vui lòng điền nội dung cho phương án đó hoặc chọn đáp án đúng khác.'
+      );
+      return;
+    }
+
+    if (qForm.visualType === 'image') {
+      const imgUrl = (qForm.visualData?.imageUrl || '').trim();
+      if (!imgUrl) {
+        showToast(
+          'error',
+          'Bạn đang chọn "Ảnh minh họa" nhưng chưa tải ảnh hoặc nhập link URL. Vui lòng thêm ảnh hoặc chọn "Không kèm hình minh họa".'
+        );
+        return;
+      }
+    }
+
+    const cleanedOptions = nonEmptyEntries.map((item) => item.text);
+    const cleanedVisualType = qForm.visualType === 'none' ? undefined : qForm.visualType;
+
+    let cleanedVisualData;
+    if (cleanedVisualType === 'image') {
+      cleanedVisualData = {
+        imageUrl: qForm.visualData.imageUrl.trim(),
+        ...(qForm.visualData?.caption?.trim() ? { caption: qForm.visualData.caption.trim() } : {}),
+      };
+    } else if (cleanedVisualType) {
+      cleanedVisualData = qForm.visualData;
+    }
+
     const updatedItem = {
-      ...qForm,
+      id: qForm.id || `cau-${Date.now()}`,
       question: cleanedQuestion,
       options: cleanedOptions,
+      answerIndex: mappedAnswerIndex,
       hint: qForm.hint.trim() || 'Hãy đọc kỹ dữ kiện đề bài và đặt tính cẩn thận nhé.',
       explanation:
         qForm.explanation.trim() ||
-        `Đáp án đúng là ${String.fromCharCode(65 + qForm.answerIndex)}: ${cleanedOptions[qForm.answerIndex]}.`,
-      visualType: qForm.visualType === 'none' ? undefined : qForm.visualType,
+        `Đáp án đúng là ${String.fromCharCode(65 + mappedAnswerIndex)}: ${cleanedOptions[mappedAnswerIndex]}.`,
+      ...(cleanedVisualType ? { visualType: cleanedVisualType } : {}),
+      ...(cleanedVisualData ? { visualData: cleanedVisualData } : {}),
     };
 
     const nextCurriculum = JSON.parse(JSON.stringify(curriculum));
@@ -163,14 +459,24 @@ export default function QuestionManagerModal({
 
     if (editingQuestionIdx === -1) {
       targetQuestions.push(updatedItem);
-      showToast('success', 'Đã thêm câu hỏi mới và lưu tự động!');
     } else {
       targetQuestions[editingQuestionIdx] = updatedItem;
-      showToast('success', 'Đã cập nhật câu hỏi và đáp án thành công!');
+    }
+
+    const saveResult = onUpdateCurriculum(nextCurriculum);
+    if (saveResult && saveResult.ok === false) {
+      sound.playWrong();
+      showToast('error', saveResult.message || 'Không thể lưu dữ liệu vào trình duyệt.');
+      return;
     }
 
     sound.playCorrect();
-    onUpdateCurriculum(nextCurriculum);
+    showToast(
+      'success',
+      editingQuestionIdx === -1
+        ? 'Đã thêm câu hỏi mới, lưu an toàn và cập nhật ngay lên màn hình Luyện tập!'
+        : 'Đã cập nhật câu hỏi, hình minh họa và đáp án thành công!'
+    );
     setEditingQuestionIdx(null);
   };
 
@@ -182,7 +488,11 @@ export default function QuestionManagerModal({
     sound.playClick();
     const nextCurriculum = JSON.parse(JSON.stringify(curriculum));
     nextCurriculum[gradeKey].topics[safeTopicIndex].questions.splice(idx, 1);
-    onUpdateCurriculum(nextCurriculum);
+    const saveResult = onUpdateCurriculum(nextCurriculum);
+    if (saveResult && saveResult.ok === false) {
+      showToast('error', saveResult.message || 'Không thể lưu thay đổi.');
+      return;
+    }
     if (editingQuestionIdx === idx) setEditingQuestionIdx(null);
     showToast('success', 'Đã xóa câu hỏi khỏi chủ đề.');
   };
@@ -213,14 +523,14 @@ export default function QuestionManagerModal({
     e.preventDefault();
     const cleanedName = questForm.name.trim();
     const cleanedChallenge = questForm.challenge.trim();
-    const cleanedOpts = questForm.options.map((o) => o.trim());
+    const cleanedOpts = questForm.options.map((o) => String(o).trim()).filter(Boolean);
 
     if (!cleanedName || !cleanedChallenge) {
       showToast('error', 'Vui lòng nhập tên ải và nội dung thử thách.');
       return;
     }
-    if (cleanedOpts.some((o) => !o)) {
-      showToast('error', 'Vui lòng nhập đầy đủ 4 lựa chọn cho thử thách.');
+    if (cleanedOpts.length < 2) {
+      showToast('error', 'Vui lòng nhập ít nhất 2 lựa chọn cho thử thách.');
       return;
     }
 
@@ -240,14 +550,24 @@ export default function QuestionManagerModal({
     const nextQuests = [...quests];
     if (editingQuestIdx === -1) {
       nextQuests.push(updatedQuest);
-      showToast('success', 'Đã thêm ải thử thách mới thành công!');
     } else {
       nextQuests[editingQuestIdx] = updatedQuest;
-      showToast('success', 'Đã cập nhật thử thách thành công!');
+    }
+
+    const saveResult = onUpdateQuests(nextQuests);
+    if (saveResult && saveResult.ok === false) {
+      sound.playWrong();
+      showToast('error', saveResult.message || 'Không thể lưu thử thách vào trình duyệt.');
+      return;
     }
 
     sound.playCorrect();
-    onUpdateQuests(nextQuests);
+    showToast(
+      'success',
+      editingQuestIdx === -1
+        ? 'Đã thêm ải thử thách mới thành công!'
+        : 'Đã cập nhật thử thách thành công!'
+    );
     setEditingQuestIdx(null);
   };
 
@@ -258,7 +578,11 @@ export default function QuestionManagerModal({
     }
     sound.playClick();
     const nextQuests = quests.filter((_, i) => i !== idx);
-    onUpdateQuests(nextQuests);
+    const saveResult = onUpdateQuests(nextQuests);
+    if (saveResult && saveResult.ok === false) {
+      showToast('error', saveResult.message || 'Không thể lưu thay đổi.');
+      return;
+    }
     if (editingQuestIdx === idx) setEditingQuestIdx(null);
     showToast('success', 'Đã xóa ải thử thách.');
   };
@@ -291,11 +615,19 @@ export default function QuestionManagerModal({
       const parsed = JSON.parse(text);
       let importedSomething = false;
       if (parsed.curriculum?.grade4?.topics && parsed.curriculum?.grade5?.topics) {
-        onUpdateCurriculum(parsed.curriculum);
+        const res = onUpdateCurriculum(parsed.curriculum);
+        if (res && res.ok === false) {
+          showToast('error', res.message || 'Tệp dữ liệu vượt quá giới hạn lưu trữ của trình duyệt.');
+          return;
+        }
         importedSomething = true;
       }
       if (Array.isArray(parsed.quests) && parsed.quests.length > 0) {
-        onUpdateQuests(parsed.quests);
+        const res = onUpdateQuests(parsed.quests);
+        if (res && res.ok === false) {
+          showToast('error', res.message || 'Không thể lưu danh sách thử thách từ tệp.');
+          return;
+        }
         importedSomething = true;
       }
       if (!importedSomething) {
@@ -325,6 +657,13 @@ export default function QuestionManagerModal({
     setConfirmReset(false);
   };
 
+  const currentImageUrl = qForm.visualData?.imageUrl || '';
+  const compressedSizeKB = estimateDataUrlKB(currentImageUrl);
+  const isLegacyVisualType =
+    qForm.visualType &&
+    qForm.visualType !== 'none' &&
+    !VISUAL_TYPES.some((vt) => vt.value === qForm.visualType);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden border-4 border-emerald-200">
@@ -336,10 +675,10 @@ export default function QuestionManagerModal({
             </div>
             <div>
               <h3 className="font-black text-lg md:text-xl leading-tight">
-                Quản Lý & Tự Sửa Câu Hỏi — Đáp Án
+                Quản Lý & Tự Sửa Câu Hỏi — Hình Minh Họa
               </h3>
               <p className="text-xs text-emerald-50 font-semibold">
-                Chỉnh sửa trực tiếp đề bài, 4 đáp án, gợi ý và lời giải; tự động lưu trên trình duyệt
+                Chỉnh sửa đề bài, tải ảnh hoặc dán link ảnh, sửa đáp án và lời giải; tự động lưu trên trình duyệt
               </p>
             </div>
           </div>
@@ -434,21 +773,32 @@ export default function QuestionManagerModal({
           </div>
         </div>
 
-        {/* Status Toast */}
+        {/* Status Toast nổi bật */}
         {statusNotice && (
           <div
-            className={`mx-4 md:mx-6 mt-3 px-4 py-2.5 rounded-2xl border text-xs md:text-sm font-bold flex items-center gap-2 ${
+            role="alert"
+            className={`mx-4 md:mx-6 mt-3 px-4 py-3 rounded-2xl border-2 text-xs md:text-sm font-black flex items-center justify-between gap-3 shadow-sm animate-fade-in ${
               statusNotice.type === 'success'
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                : 'bg-rose-50 border-rose-200 text-rose-900'
+                ? 'bg-emerald-50 border-emerald-400 text-emerald-950'
+                : 'bg-rose-50 border-rose-400 text-rose-950'
             }`}
           >
-            {statusNotice.type === 'success' ? (
-              <CheckCircle2 size={17} className="text-emerald-600 flex-shrink-0" />
-            ) : (
-              <AlertCircle size={17} className="text-rose-600 flex-shrink-0" />
-            )}
-            <span>{statusNotice.text}</span>
+            <div className="flex items-center gap-2.5">
+              {statusNotice.type === 'success' ? (
+                <CheckCircle2 size={19} className="text-emerald-600 flex-shrink-0" />
+              ) : (
+                <AlertCircle size={19} className="text-rose-600 flex-shrink-0" />
+              )}
+              <span>{statusNotice.text}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStatusNotice(null)}
+              aria-label="Đóng thông báo"
+              className="p-1 rounded-lg hover:bg-black/5 flex-shrink-0"
+            >
+              <X size={15} />
+            </button>
           </div>
         )}
 
@@ -553,9 +903,343 @@ export default function QuestionManagerModal({
                     />
                   </div>
 
+                  {/* Khối Hình minh họa & Ảnh đề bài */}
+                  <div className="p-4 rounded-2xl bg-white border-2 border-indigo-200 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <label className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                        <ImageIcon size={16} className="text-indigo-600" />
+                        Hình minh họa & Ảnh bài toán
+                      </label>
+
+                      <select
+                        aria-label="Loại hình minh họa"
+                        value={qForm.visualType || 'none'}
+                        onChange={(e) => handleVisualTypeChange(e.target.value)}
+                        className="px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50/50 text-xs font-bold text-slate-800"
+                      >
+                        {VISUAL_TYPES.map((vt) => (
+                          <option key={vt.value} value={vt.value}>
+                            {vt.label}
+                          </option>
+                        ))}
+                        {isLegacyVisualType && (
+                          <option value={qForm.visualType}>
+                            {LEGACY_VISUAL_LABELS[qForm.visualType] || qForm.visualType}
+                          </option>
+                        )}
+                      </select>
+                    </div>
+
+                    {/* Nút tải ảnh từ máy & Ô nhập URL luôn sẵn sàng */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
+                      <div className="md:col-span-4 flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={isCompressingImage}
+                          onClick={() => imageUploadInputRef.current?.click()}
+                          className="w-full px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95"
+                        >
+                          <ImagePlus size={16} />
+                          <span>{isCompressingImage ? 'Đang nén ảnh...' : 'Tải ảnh từ máy'}</span>
+                        </button>
+                        <input
+                          ref={imageUploadInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/*"
+                          onChange={handleUploadImageFile}
+                          className="hidden"
+                        />
+                      </div>
+
+                      <div className="md:col-span-8 flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Link2
+                            size={15}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                          />
+                          <input
+                            type="text"
+                            value={currentImageUrl.startsWith('data:') ? '' : currentImageUrl}
+                            onChange={(e) => handleImageUrlChange(e.target.value)}
+                            placeholder={
+                              currentImageUrl.startsWith('data:')
+                                ? 'Đã tải ảnh từ máy (hoặc dán link URL mới tại đây để thay thế)'
+                                : 'Hoặc nhập link ảnh URL (https://...)'
+                            }
+                            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        </div>
+
+                        {(currentImageUrl || qForm.visualType === 'image') && (
+                          <button
+                            type="button"
+                            onClick={handleClearImage}
+                            className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-black flex items-center gap-1 flex-shrink-0"
+                            title="Xóa ảnh minh họa"
+                          >
+                            <Trash2 size={14} /> Xóa ảnh
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Khung xem trước ảnh hoặc tùy chỉnh thông số hình */}
+                    {qForm.visualType === 'image' && (
+                      <div className="space-y-2.5 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Chú thích dưới ảnh (không bắt buộc)
+                          </label>
+                          <input
+                            type="text"
+                            value={qForm.visualData?.caption || ''}
+                            onChange={(e) => updateVisualDataField('caption', e.target.value)}
+                            placeholder="Ví dụ: Hình vẽ thửa ruộng hình chữ nhật..."
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800"
+                          />
+                        </div>
+
+                        {currentImageUrl ? (
+                          <div className="p-3 rounded-2xl bg-slate-50 border border-dashed border-indigo-300 flex flex-col items-center gap-2">
+                            <div className="w-full flex items-center justify-between text-[11px] font-bold text-indigo-800">
+                              <span>Khung xem trước ảnh minh họa:</span>
+                              <span className="bg-indigo-100 px-2 py-0.5 rounded-full">
+                                {compressedSizeKB > 0
+                                  ? `Đã nén tự động: ~${compressedSizeKB} KB`
+                                  : 'Ảnh từ Link URL'}
+                              </span>
+                            </div>
+                            {!previewImgError ? (
+                              <img
+                                src={currentImageUrl}
+                                alt="Xem trước ảnh minh họa"
+                                onError={() => setPreviewImgError(true)}
+                                className="max-h-56 w-auto max-w-full rounded-xl shadow border border-slate-200 object-contain bg-white"
+                              />
+                            ) : (
+                              <div className="px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+                                Không hiển thị được ảnh từ đường dẫn này. Vui lòng kiểm tra lại link URL hoặc dùng nút "Tải ảnh từ máy".
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+                            Hãy bấm <strong>"Tải ảnh từ máy"</strong> (tự động nén gọn nhẹ) hoặc dán <strong>link ảnh URL</strong> vào ô phía trên.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Chỉnh thông số trực tiếp cho các hình học / bảng số / mẹo */}
+                    {qForm.visualType === 'fraction' && (
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Tử số
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={qForm.visualData?.num ?? 3}
+                            onChange={(e) => updateVisualDataField('num', Number(e.target.value))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Mẫu số
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={qForm.visualData?.den ?? 4}
+                            onChange={(e) => updateVisualDataField('den', Math.max(1, Number(e.target.value)))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {qForm.visualType === 'parallelogram' && (
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Độ dài đáy a (cm)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={qForm.visualData?.base ?? 18}
+                            onChange={(e) => updateVisualDataField('base', Number(e.target.value))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Chiều cao h (cm)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={qForm.visualData?.height ?? 10}
+                            onChange={(e) => updateVisualDataField('height', Number(e.target.value))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {qForm.visualType === 'rhombus' && (
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Đường chéo m (cm)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={qForm.visualData?.d1 ?? 16}
+                            onChange={(e) => updateVisualDataField('d1', Number(e.target.value))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Đường chéo n (cm)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={qForm.visualData?.d2 ?? 12}
+                            onChange={(e) => updateVisualDataField('d2', Number(e.target.value))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {qForm.visualType === 'circle' && (
+                      <div className="pt-1 max-w-xs">
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                          Bán kính r (cm)
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          step="0.1"
+                          value={qForm.visualData?.r ?? 5}
+                          onChange={(e) => updateVisualDataField('r', Number(e.target.value))}
+                          className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                        />
+                      </div>
+                    )}
+
+                    {qForm.visualType === 'motion-car' && (
+                      <div className="grid grid-cols-3 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Quãng đường (km)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={qForm.visualData?.s ?? 135}
+                            onChange={(e) => updateVisualDataField('s', Number(e.target.value))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Thời gian
+                          </label>
+                          <input
+                            type="text"
+                            value={qForm.visualData?.t ?? '2,5 giờ'}
+                            onChange={(e) => updateVisualDataField('t', e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Vận tốc (km/giờ)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={qForm.visualData?.v ?? 54}
+                            onChange={(e) => updateVisualDataField('v', Number(e.target.value))}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {qForm.visualType === 'place-value' && (
+                      <div className="grid grid-cols-3 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Lớp triệu
+                          </label>
+                          <input
+                            type="text"
+                            value={qForm.visualData?.millions ?? '72'}
+                            onChange={(e) => updateVisualDataField('millions', e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Lớp nghìn
+                          </label>
+                          <input
+                            type="text"
+                            value={qForm.visualData?.thousands ?? '005'}
+                            onChange={(e) => updateVisualDataField('thousands', e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            Lớp đơn vị
+                          </label>
+                          <input
+                            type="text"
+                            value={qForm.visualData?.units ?? '400'}
+                            onChange={(e) => updateVisualDataField('units', e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {qForm.visualType === 'tip-card' && (
+                      <div className="pt-1">
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                          Công thức / Mẹo tính nhanh
+                        </label>
+                        <input
+                          type="text"
+                          value={qForm.visualData?.rule ?? '25 × 4 = 100'}
+                          onChange={(e) => updateVisualDataField('rule', e.target.value)}
+                          placeholder="Ví dụ: 25 × 4 = 100 hoặc 125 × 8 = 1000"
+                          className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold"
+                        />
+                      </div>
+                    )}
+
+                    {/* Xem trước các hình minh họa built-in */}
+                    {qForm.visualType &&
+                      qForm.visualType !== 'none' &&
+                      qForm.visualType !== 'image' && (
+                        <div className="pt-1">
+                          <VisualHelper type={qForm.visualType} data={qForm.visualData} />
+                        </div>
+                      )}
+                  </div>
+
                   <div>
                     <label className="block text-xs font-black text-slate-700 mb-2">
-                      4 phương án trả lời (Bấm chọn ô tròn để đặt làm Đáp án đúng) *
+                      Các phương án trả lời (Nhập ít nhất 2 phương án cho câu Đúng/Sai, hoặc 3–4 phương án; bấm chọn Đáp án đúng) *
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {qForm.options.map((opt, idx) => {
@@ -589,7 +1273,11 @@ export default function QuestionManagerModal({
                                 nextOpts[idx] = e.target.value;
                                 setQForm({ ...qForm, options: nextOpts });
                               }}
-                              placeholder={`Đáp án ${String.fromCharCode(65 + idx)}`}
+                              placeholder={
+                                idx < 2
+                                  ? `Đáp án ${String.fromCharCode(65 + idx)} (bắt buộc)`
+                                  : `Đáp án ${String.fromCharCode(65 + idx)} (có thể bỏ trống nếu chỉ dùng ${idx} lựa chọn)`
+                              }
                               className="flex-1 text-sm font-bold text-slate-800 bg-transparent focus:outline-none"
                             />
                           </div>
@@ -625,37 +1313,21 @@ export default function QuestionManagerModal({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-black text-slate-700">Hình minh họa:</label>
-                      <select
-                        value={qForm.visualType || 'none'}
-                        onChange={(e) => setQForm({ ...qForm, visualType: e.target.value })}
-                        className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-800"
-                      >
-                        {VISUAL_TYPES.map((vt) => (
-                          <option key={vt.value} value={vt.value}>
-                            {vt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditingQuestionIdx(null)}
-                        className="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs"
-                      >
-                        Hủy bỏ
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm"
-                      >
-                        <Save size={15} /> Lưu câu hỏi
-                      </button>
-                    </div>
+                  <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingQuestionIdx(null)}
+                      className="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs"
+                    >
+                      Hủy bỏ
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isCompressingImage}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-black text-xs md:text-sm flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Save size={15} /> Lưu câu hỏi
+                    </button>
                   </div>
                 </form>
               )}
@@ -665,10 +1337,14 @@ export default function QuestionManagerModal({
                 {currentQuestions.map((q, idx) => (
                   <div
                     key={q.id || idx}
-                    className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-indigo-300 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3"
+                    className={`p-4 rounded-2xl border transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 ${
+                      editingQuestionIdx === idx
+                        ? 'border-amber-400 bg-amber-50/40'
+                        : 'border-slate-200 bg-white hover:border-indigo-300'
+                    }`}
                   >
                     <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="bg-indigo-100 text-indigo-800 text-[11px] font-black px-2.5 py-0.5 rounded-full">
                           Câu {idx + 1}
                         </span>
@@ -676,6 +1352,16 @@ export default function QuestionManagerModal({
                           Đáp án đúng: {String.fromCharCode(65 + (q.answerIndex ?? 0))} (
                           {q.options?.[q.answerIndex ?? 0]})
                         </span>
+                        {q.visualType === 'image' && q.visualData?.imageUrl && (
+                          <span className="text-[11px] font-bold bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full">
+                            🖼️ Có ảnh minh họa
+                          </span>
+                        )}
+                        {q.visualType && q.visualType !== 'none' && q.visualType !== 'image' && (
+                          <span className="text-[11px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                            📐 Có hình/sơ đồ
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm font-black text-slate-800">{q.question}</p>
                     </div>
@@ -810,7 +1496,7 @@ export default function QuestionManagerModal({
 
                   <div>
                     <label className="block text-xs font-black text-slate-700 mb-2">
-                      4 phương án và chọn đáp án đúng *
+                      Phương án (từ 2 đến 4 lựa chọn) và chọn đáp án đúng *
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {questForm.options.map((opt, idx) => {

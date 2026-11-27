@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Volume2,
@@ -11,12 +11,14 @@ import {
   Sparkles,
   Edit,
   Pencil,
+  RotateCcw,
 } from 'lucide-react';
 import VisualHelper from './VisualHelper';
 import { sound, speakVietnamese, stopVietnameseSpeech } from '../utils/audio';
 
 export default function PracticeMode({
   curriculum,
+  curriculumRevision = 0,
   onAddStars,
   onOpenScratchpad,
   onOpenQuestionManager,
@@ -29,6 +31,8 @@ export default function PracticeMode({
   const [isAnswered, setIsAnswered] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const prevRevisionRef = useRef(curriculumRevision);
 
   const safeTopicIndex = Math.min(
     selectedTopicIndex,
@@ -47,8 +51,20 @@ export default function PracticeMode({
       setCurrentQuestionIndex(safeQuestionIndex);
       setSelectedAnswer(null);
       setIsAnswered(false);
+      setShowHint(false);
     }
   }, [questions.length, currentQuestionIndex, safeQuestionIndex]);
+
+  useEffect(() => {
+    if (prevRevisionRef.current !== curriculumRevision) {
+      prevRevisionRef.current = curriculumRevision;
+      stopVietnameseSpeech();
+      setIsSpeaking(false);
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+      setShowHint(false);
+    }
+  }, [curriculumRevision]);
 
   useEffect(() => {
     return () => {
@@ -89,8 +105,19 @@ export default function PracticeMode({
     } else {
       sound.playWrong();
       setMascotMood('encouraging');
-      setMascotMessage('Đừng nản lòng nhé! Xem ngay lời giải chi tiết bên dưới để hiểu bài nha!');
+      setMascotMessage('Đừng nản lòng nhé! Xem lời giải bên dưới hoặc bấm "Làm lại câu này" nha!');
     }
+  };
+
+  const handleRetryQuestion = () => {
+    sound.playClick();
+    stopVietnameseSpeech();
+    setIsSpeaking(false);
+    setSelectedAnswer(null);
+    setIsAnswered(false);
+    setShowHint(false);
+    setMascotMood('happy');
+    setMascotMessage('Hãy đọc kỹ đề và thử làm lại câu này nhé! Cố lên!');
   };
 
   const handleNextQuestion = () => {
@@ -121,7 +148,7 @@ export default function PracticeMode({
         <p className="font-bold text-slate-600">Chủ đề này chưa có câu hỏi nào.</p>
         {onOpenQuestionManager && (
           <button
-            onClick={() => onOpenQuestionManager(safeTopicIndex)}
+            onClick={() => onOpenQuestionManager(safeTopicIndex, null)}
             className="btn-fun btn-primary mx-auto px-5 py-2.5 text-sm"
           >
             <Pencil size={16} /> Thêm câu hỏi ngay
@@ -194,9 +221,9 @@ export default function PracticeMode({
             </button>
             {onOpenQuestionManager && (
               <button
-                onClick={() => onOpenQuestionManager(safeTopicIndex)}
+                onClick={() => onOpenQuestionManager(safeTopicIndex, safeQuestionIndex)}
                 className="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl border border-emerald-200 transition-transform active:scale-90 flex items-center gap-1.5 text-xs font-bold"
-                title="Tự chỉnh sửa câu hỏi và đáp án"
+                title="Tự chỉnh sửa câu hỏi, hình minh họa và đáp án"
               >
                 <Pencil size={15} /> Sửa câu hỏi
               </button>
@@ -229,9 +256,9 @@ export default function PracticeMode({
           </div>
         )}
 
-        {/* 4 phương án trả lời */}
+        {/* Các phương án trả lời */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 my-6">
-          {currentQ.options.map((opt, idx) => {
+          {(currentQ.options || []).map((opt, idx) => {
             let btnStyle = 'bg-slate-50 hover:bg-indigo-50/70 border-slate-200 text-slate-800';
             if (isAnswered) {
               if (idx === currentQ.answerIndex) {
@@ -273,7 +300,7 @@ export default function PracticeMode({
           })}
         </div>
 
-        {/* Điều khiển gợi ý & chuyển câu */}
+        {/* Điều khiển gợi ý, làm lại & chuyển câu */}
         <div className="pt-4 border-t border-indigo-50 flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={() => {
@@ -286,12 +313,20 @@ export default function PracticeMode({
           </button>
 
           {isAnswered && (
-            <button onClick={handleNextQuestion} className="btn-fun btn-primary px-6 py-2.5 text-sm">
-              <span>
-                {safeQuestionIndex < questions.length - 1 ? 'Câu tiếp theo' : 'Hoàn thành chủ đề'}
-              </span>
-              <ArrowRight size={18} />
-            </button>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                onClick={handleRetryQuestion}
+                className="px-4 py-2.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs md:text-sm flex items-center gap-1.5 transition-all active:scale-95"
+              >
+                <RotateCcw size={16} /> Làm lại câu này
+              </button>
+              <button onClick={handleNextQuestion} className="btn-fun btn-primary px-6 py-2.5 text-sm">
+                <span>
+                  {safeQuestionIndex < questions.length - 1 ? 'Câu tiếp theo' : 'Hoàn thành chủ đề'}
+                </span>
+                <ArrowRight size={18} />
+              </button>
+            </div>
           )}
         </div>
 

@@ -24,6 +24,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('practice'); // 'practice' | 'speed' | 'adventure'
 
   const [curriculum, setCurriculum] = useState(() => loadCurriculum());
+  const [curriculumRevision, setCurriculumRevision] = useState(0);
   const [quests, setQuests] = useState(() => loadQuests());
 
   const [stars, setStars] = useState(() => {
@@ -41,6 +42,7 @@ export default function App() {
     scope: 'practice',
     grade: 'grade4',
     topicIndex: 0,
+    questionIndex: null,
   });
 
   const [isDocsOpen, setIsDocsOpen] = useState(false);
@@ -66,18 +68,28 @@ export default function App() {
   };
 
   const handleUpdateCurriculum = (nextCurriculum) => {
+    const result = saveCurriculum(nextCurriculum);
+    if (!result.ok) {
+      return result;
+    }
     setCurriculum(nextCurriculum);
-    saveCurriculum(nextCurriculum);
+    setCurriculumRevision((prev) => prev + 1);
+    return result;
   };
 
   const handleResetCurriculum = () => {
     const restored = resetCurriculum();
     setCurriculum(restored);
+    setCurriculumRevision((prev) => prev + 1);
   };
 
   const handleUpdateQuests = (nextQuests) => {
+    const result = saveQuests(nextQuests);
+    if (!result.ok) {
+      return result;
+    }
     setQuests(nextQuests);
-    saveQuests(nextQuests);
+    return result;
   };
 
   const handleResetQuests = () => {
@@ -89,8 +101,9 @@ export default function App() {
     scope = 'practice',
     grade = selectedGrade,
     topicIndex = 0,
+    questionIndex = null,
   } = {}) => {
-    setQuestionManagerOpts({ scope, grade, topicIndex });
+    setQuestionManagerOpts({ scope, grade, topicIndex, questionIndex });
     setIsQuestionManagerOpen(true);
   };
 
@@ -134,13 +147,15 @@ export default function App() {
           <PracticeMode
             key={selectedGrade}
             curriculum={currentCurriculum}
+            curriculumRevision={curriculumRevision}
             onAddStars={handleAddStars}
             onOpenScratchpad={() => setIsScratchpadOpen(true)}
-            onOpenQuestionManager={(topicIndex) =>
+            onOpenQuestionManager={(topicIndex, questionIndex = null) =>
               handleOpenQuestionManager({
                 scope: 'practice',
                 grade: selectedGrade,
                 topicIndex,
+                questionIndex,
               })
             }
             setMascotMood={setMascotMood}
@@ -232,6 +247,7 @@ export default function App() {
         initialScope={questionManagerOpts.scope}
         initialGrade={questionManagerOpts.grade}
         initialTopicIndex={questionManagerOpts.topicIndex}
+        initialQuestionIndex={questionManagerOpts.questionIndex}
       />
 
       <DocsHubModal
